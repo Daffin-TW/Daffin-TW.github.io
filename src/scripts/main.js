@@ -1,6 +1,5 @@
 /**
  * Daffin Tanjiro Widison - Portfolio JavaScript
- * Modern Interactive Showcase inspired by vannesanth.github.io
  */
 
 (function () {
