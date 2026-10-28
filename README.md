@@ -1,11 +1,10 @@
-
-# Daffin TW — Personal Portfolio
+# Daffin Tanjiro Widison — Personal Portfolio
 
 [![Deploy to GitHub Pages](https://github.com/Daffin-TW/Daffin-TW.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/Daffin-TW/Daffin-TW.github.io/actions/workflows/deploy.yml)
 
 > **Live site:** [https://daffin-tw.github.io](https://daffin-tw.github.io)
 
-A clean, modern, responsive personal portfolio website built with pure **HTML5 + CSS3 + JavaScript** — no build step required.
+A modern, elegant, and responsive personal portfolio website for Data Science & Machine Learning, styled with ambient dark glassmorphism and an interactive showcase inspired by `vannesanth.github.io`.
 
 ---
 
@@ -13,20 +12,20 @@ A clean, modern, responsive personal portfolio website built with pure **HTML5 +
 
 ```
 Daffin-TW.github.io/
-├── index.html                  # Main single-page site
+├── index.html                  # Main single-page portfolio
 ├── src/
 │   ├── config/
-│   │   └── site.js             # Site-wide config (name, social links, email)
+│   │   └── site.js             # Site-wide configuration (WhatsApp, LinkedIn, GitHub, email)
 │   ├── data/
-│   │   └── projects.js         # Project data (titles, descriptions, images)
+│   │   └── projects.js         # Structured project data (titles, descriptions, repo URLs, images)
 │   ├── scripts/
-│   │   └── main.js             # All JS functionality
+│   │   └── main.js             # Interactive gallery lightbox, dynamic rendering, mobile navigation
 │   ├── styles/
-│   │   └── main.css            # Complete stylesheet
-│   └── img/                    # All project screenshots & profile picture
+│   │   └── main.css            # Custom glassmorphism, glowing backdrop, and smooth scrollbar
+│   └── img/                    # Personal logo (tw_logo.png), profile picture, and screenshots
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml          # GitHub Actions auto-deploy workflow
+│       └── deploy.yml          # GitHub Actions automated deployment workflow
 └── README.md
 ```
 
@@ -34,97 +33,82 @@ Daffin-TW.github.io/
 
 ## 🚀 Local Development
 
-No build step or package installation required. Just open the file in your browser or serve it locally:
+No compilation or build step required. Simply open the site in your browser or run a lightweight local server:
 
-### Option 1 — Open directly (simplest)
-Double-click `index.html` to open it in your browser. Everything works on the `file://` protocol.
+### Option 1 — Local HTTP Server (Recommended)
 
-### Option 2 — Local HTTP server (recommended)
-
-Using Python (built-in):
+Using Python 3:
 ```bash
-cd /path/to/Daffin-TW.github.io
 python3 -m http.server 8080
 # Open: http://localhost:8080
 ```
 
-Using Node.js (if installed):
+Using Node.js:
 ```bash
 npx serve .
 ```
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Configuration & Customization
 
-### Add Your Email
-Edit [`src/config/site.js`](src/config/site.js) and fill in the `email` field to enable the email contact button:
+### 1. Social Links & WhatsApp
+Edit [`src/config/site.js`](src/config/site.js) to configure personal links:
 
 ```js
 window.SITE_CONFIG = {
-  name: "Daffin TW",
-  tagline: "Turning Data into Insights.",
+  name: "Daffin Tanjiro Widison",
+  tagline: "Turning Complex Data into Actionable Insights & Intelligent Solutions",
   github: "https://github.com/Daffin-TW",
   linkedin: "https://www.linkedin.com/in/daffintw",
-  email: "dtwdaffintw@email.com",   // ← add your email here
+  whatsapp: "+6282332232896",
+  whatsappUrl: "https://wa.me/6282332232896?text=Hello%20Daffin%2C%20I%20saw%20your%20portfolio%20and%20would%20like%20to%20connect.",
+  email: "dtwdaffintw@gmail.com",
 };
 ```
 
-If `email` is empty (`""`), the email button is automatically hidden.
-
-### Update Projects
-Edit [`src/data/projects.js`](src/data/projects.js) to add, remove, or update projects. Each project object supports:
+### 2. Managing Projects & Repository URLs
+Edit [`src/data/projects.js`](src/data/projects.js) to add or update projects. Each project entry supports:
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | number | Unique identifier (used as badge number) |
+| `id` | number | Unique ID |
 | `title` | string | Project title |
-| `description` | string | Short description |
-| `technologies` | string[] | List of tech tags |
-| `images` | string[] | Relative paths to two screenshot images |
-| `repoUrl` | string \| null | Optional GitHub link |
+| `category` | string | Project category badge (e.g. `Sales Analytics & Interactive Dashboard`) |
+| `categoryIcon` | string | Font Awesome icon class (e.g. `fa-solid fa-chart-pie`) |
+| `description` | string | Project description |
+| `technologies` | string[] | Array of technologies used |
+| `images` | object[] | Screenshots with `src` and descriptive `caption` |
+| `repoUrl` | string \| null | GitHub repository URL (displays "View Repository" button if set, or "Confidential / Internal" if null) |
 
 ---
 
-## 🌐 Deployment
+## 🌐 Deployment to GitHub Pages
 
-The site deploys automatically via **GitHub Actions** on every push to `main`.
+The portfolio is pre-configured for automated deployment via **GitHub Actions** upon pushing to the `main` branch.
 
-### Manual deployment
-1. Push your changes to the `main` branch.
-2. GitHub Actions builds and deploys to GitHub Pages automatically.
-3. Visit `https://daffin-tw.github.io` after the workflow finishes (~1 min).
-
-### First-time setup
-1. Go to your repo **Settings → Pages**.
-2. Set **Source** to **GitHub Actions**.
-3. Push any change to `main` to trigger the first deploy.
-
----
-
-## 🎨 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Markup | HTML5 (semantic) |
-| Styling | CSS3 (custom properties, Grid, Flexbox) |
-| Interactivity | Vanilla JavaScript (ES6+) |
-| Fonts | Google Fonts — Inter |
-| Hosting | GitHub Pages |
-| CI/CD | GitHub Actions |
+1. Ensure your repository settings in **Settings → Pages** have **Source** set to **GitHub Actions**.
+2. Commit and push your changes:
+   ```bash
+   git add .
+   git commit -m "Update portfolio for Daffin Tanjiro Widison"
+   git push origin main
+   ```
+3. GitHub Actions will deploy the website automatically.
 
 ---
 
-## ♿ Accessibility
+## 🎨 Tech Stack & Design Highlights
 
-- Semantic HTML (`header`, `nav`, `main`, `section`, `footer`)
-- Skip-to-main-content link
-- ARIA labels on icon-only controls
-- Meaningful `alt` text on all images
-- Keyboard navigation for lightbox and modals
-- `prefers-reduced-motion` support
-- Visible focus indicators
+- **Aesthetic**: Slate-950 dark theme with ambient radial glows and glassmorphism.
+- **Typography**: Google Fonts (*Plus Jakarta Sans* & *Space Grotesk*).
+- **Styling**: Tailwind CSS CDN + custom glassmorphic CSS rules.
+- **Icons**: Font Awesome 6.5.1 CDN.
+- **Interactivity**:
+  - Full-screen image lightbox with prev/next controls, keyboard navigation (Left/Right/Esc), and backdrop blur.
+  - Responsive mobile drawer menu.
+  - Smooth scrolling navigation.
 
 ---
 
-© 2026 Daffin TW. All rights reserved.
+© 2026 Daffin Tanjiro Widison. All rights reserved.

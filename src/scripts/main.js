@@ -1,416 +1,216 @@
-/* =====================================================
-   main.js — Portfolio JavaScript
-   ===================================================== */
+/**
+ * Daffin TW - Portfolio JavaScript
+ * Modern Interactive Showcase inspired by vannesanth.github.io
+ */
 
 (function () {
   'use strict';
 
-  /* ==========================================
-     GLOBALS & HELPERS
-     ========================================== */
-  const CONFIG = window.SITE_CONFIG || {};
-  const PROJECTS = window.PROJECTS || [];
+  // Global state for lightbox
+  let currentProject = null;
+  let currentImageIndex = 0;
 
-  function qs(selector, parent) {
-    return (parent || document).querySelector(selector);
-  }
+  // DOM Elements
+  const projectsContainer = document.getElementById('projects-container');
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImg');
+  const modalCaption = document.getElementById('modalCaption');
+  const modalCounter = document.getElementById('modalCounter');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
 
-  function qsa(selector, parent) {
-    return Array.from((parent || document).querySelectorAll(selector));
-  }
+  // Accent color styles for category badges
+  const categoryStyles = {
+    indigo: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    cyan: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+    emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    purple: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+    amber: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+    rose: "bg-rose-500/10 border-rose-500/20 text-rose-400",
+    blue: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+    teal: "bg-teal-500/10 border-teal-500/20 text-teal-400",
+  };
 
-  /* ==========================================
-     NAVIGATION
-     ========================================== */
-  function initNav() {
-    const navbar   = qs('#navbar');
-    const toggle   = qs('#nav-toggle');
-    const links    = qs('#nav-links');
-    const navLinks = qsa('.nav-link', links);
-
-    // Hamburger toggle
-    toggle.addEventListener('click', () => {
-      const open = links.classList.toggle('open');
-      toggle.classList.toggle('open', open);
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-
-    // Close mobile menu on link click
-    navLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        links.classList.remove('open');
-        toggle.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-      });
-    });
-
-    // Close on outside click
-    document.addEventListener('click', (e) => {
-      if (links.classList.contains('open') &&
-          !navbar.contains(e.target)) {
-        links.classList.remove('open');
-        toggle.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-      }
-    });
-
-    // Active section highlighting
-    const sections = qsa('section[id]');
-
-    function updateActiveLink() {
-      let current = '';
-      const scrollY = window.scrollY;
-
-      sections.forEach(sec => {
-        const top = sec.offsetTop - 100;
-        if (scrollY >= top) current = sec.id;
-      });
-
-      navLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        link.classList.toggle('active', href === '#' + current);
-      });
-    }
-
-    window.addEventListener('scroll', updateActiveLink, { passive: true });
-    updateActiveLink();
-  }
-
-  /* ==========================================
-     PROJECTS — RENDER CARDS
-     ========================================== */
+  /**
+   * Render Featured Projects
+   */
   function renderProjects() {
-    const grid = qs('#projects-grid');
-    if (!grid || !PROJECTS.length) return;
+    if (!projectsContainer || !window.PROJECTS) return;
 
-    grid.innerHTML = '';
-
-    PROJECTS.forEach((project) => {
-      const numStr = String(project.id).padStart(2, '0');
-      const techHTML = project.technologies
-        .map(t => `<span class="tech-tag">${escHtml(t)}</span>`)
-        .join('');
-
-      const img1 = project.images[0] || '';
-      const img2 = project.images[1] || '';
-
-      const card = document.createElement('article');
-      card.className = 'project-card reveal';
-      card.innerHTML = `
-        <span class="project-number">${numStr}</span>
-        <h3 class="project-title">${escHtml(project.title)}</h3>
-        <p class="project-description">${escHtml(project.description)}</p>
-        <div class="project-tech">${techHTML}</div>
-        <div class="project-screenshots">
-          <div class="screenshot-thumb" role="button" tabindex="0"
-               aria-label="View screenshot 1 of ${escHtml(project.title)}"
-               data-images='${JSON.stringify(project.images)}'
-               data-index="0">
-            <img src="${escHtml(img1)}"
-                 alt="Screenshot 1 of ${escHtml(project.title)}"
-                 loading="lazy">
-          </div>
-          <div class="screenshot-thumb" role="button" tabindex="0"
-               aria-label="View screenshot 2 of ${escHtml(project.title)}"
-               data-images='${JSON.stringify(project.images)}'
-               data-index="1">
-            <img src="${escHtml(img2)}"
-                 alt="Screenshot 2 of ${escHtml(project.title)}"
-                 loading="lazy">
+    projectsContainer.innerHTML = window.PROJECTS.map(project => {
+      const badgeStyle = categoryStyles[project.accentColor] || categoryStyles.indigo;
+      const imagesHtml = project.images.map((img, idx) => `
+        <div class="group relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50 cursor-pointer aspect-[16/10]"
+             onclick="openGalleryModal(${project.id}, ${idx})">
+          <img src="${img.src}" alt="${img.caption}" loading="lazy" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          <div class="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-medium text-xs backdrop-blur-sm">
+            <i class="fa-solid fa-expand text-base text-indigo-400"></i>
+            <span>View Fullscreen</span>
           </div>
         </div>
-        <div class="project-actions">
-          <button class="btn btn-ghost btn-view-screenshots"
-                  data-images='${JSON.stringify(project.images)}'
-                  data-index="0"
-                  aria-label="View screenshots for ${escHtml(project.title)}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>
-            </svg>
-            View Screenshots
-          </button>
-          <button class="btn btn-outline btn-view-details"
-                  data-project-id="${project.id}"
-                  aria-label="View details for ${escHtml(project.title)}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            View Details
-          </button>
-        </div>
+      `).join('');
+
+      const techBadgesHtml = project.technologies.map(tech => `
+        <span class="px-3 py-1 rounded-lg bg-slate-900 text-xs font-medium text-slate-300 border border-slate-800">${tech}</span>
+      `).join('');
+
+      const repoButtonHtml = project.repoUrl ? `
+        <a href="${project.repoUrl}" target="_blank" rel="noopener noreferrer" 
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 hover:border-indigo-500 text-xs font-semibold hover:text-white transition-all shadow-sm group/btn">
+          <i class="fa-brands fa-github text-base text-indigo-400 group-hover/btn:text-white transition-colors"></i>
+          <span>View Repository</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400 ml-0.5"></i>
+        </a>
+      ` : `
+        <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/50 border border-slate-800/80 text-slate-500 text-xs font-medium">
+          <i class="fa-solid fa-lock text-xs"></i>
+          <span>Confidential / Internal Project</span>
+        </span>
       `;
 
-      grid.appendChild(card);
-    });
+      return `
+        <article class="glass-card rounded-3xl p-6 md:p-8 transition-all duration-300 shadow-xl border border-slate-800/80 hover:border-indigo-500/40">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <!-- Description Column -->
+            <div class="lg:col-span-5 space-y-4">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-semibold ${badgeStyle}">
+                <i class="${project.categoryIcon}"></i>
+                <span>${project.category}</span>
+              </div>
+              
+              <h3 class="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
+                ${project.title}
+              </h3>
 
-    // Attach listeners to screenshot thumbs
-    qsa('.screenshot-thumb').forEach(thumb => {
-      const openLightbox = () => {
-        const images = JSON.parse(thumb.dataset.images);
-        const index  = parseInt(thumb.dataset.index, 10);
-        showLightbox(images, index);
-      };
-      thumb.addEventListener('click', openLightbox);
-      thumb.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openLightbox();
-        }
-      });
-    });
+              <div class="text-slate-300 text-sm md:text-base leading-relaxed space-y-2">
+                <p class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-circle-check text-indigo-400 mt-1 flex-shrink-0 text-sm"></i>
+                  <span>${project.description}</span>
+                </p>
+              </div>
 
-    // Attach listeners to "View Screenshots" buttons
-    qsa('.btn-view-screenshots').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const images = JSON.parse(btn.dataset.images);
-        showLightbox(images, 0);
-      });
-    });
+              <!-- Tools / Tags -->
+              <div class="pt-2">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tools & Technologies:</p>
+                <div class="flex flex-wrap gap-2">
+                  ${techBadgesHtml}
+                </div>
+              </div>
 
-    // Attach listeners to "View Details" buttons
-    qsa('.btn-view-details').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id      = parseInt(btn.dataset.projectId, 10);
-        const project = PROJECTS.find(p => p.id === id);
-        if (project) showModal(project);
-      });
-    });
-  }
-
-  /* ==========================================
-     LIGHTBOX
-     ========================================== */
-  let lightboxImages = [];
-  let lightboxIndex  = 0;
-
-  const lightboxOverlay = qs('#lightbox-overlay');
-  const lightboxImg     = qs('#lightbox-img');
-  const lightboxCounter = qs('#lightbox-counter');
-  const lightboxPrev    = qs('#lightbox-prev');
-  const lightboxNext    = qs('#lightbox-next');
-  const lightboxClose   = qs('#lightbox-close');
-
-  function showLightbox(images, index) {
-    lightboxImages = images;
-    lightboxIndex  = index;
-    updateLightbox();
-    lightboxOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    lightboxClose.focus();
-  }
-
-  function hideLightbox() {
-    lightboxOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  function updateLightbox() {
-    const src = lightboxImages[lightboxIndex] || '';
-    lightboxImg.src = src;
-    lightboxImg.alt = `Screenshot ${lightboxIndex + 1} of ${lightboxImages.length}`;
-    if (lightboxCounter) {
-      lightboxCounter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
-    }
-    if (lightboxPrev) lightboxPrev.disabled = lightboxImages.length <= 1;
-    if (lightboxNext) lightboxNext.disabled = lightboxImages.length <= 1;
-  }
-
-  function lightboxPrevImg() {
-    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
-    updateLightbox();
-  }
-
-  function lightboxNextImg() {
-    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
-    updateLightbox();
-  }
-
-  function initLightbox() {
-    if (!lightboxOverlay) return;
-
-    lightboxClose.addEventListener('click', hideLightbox);
-    if (lightboxPrev) lightboxPrev.addEventListener('click', lightboxPrevImg);
-    if (lightboxNext) lightboxNext.addEventListener('click', lightboxNextImg);
-
-    // Close on overlay click
-    lightboxOverlay.addEventListener('click', (e) => {
-      if (e.target === lightboxOverlay) hideLightbox();
-    });
-
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-      if (!lightboxOverlay.classList.contains('active')) return;
-      if (e.key === 'Escape')      hideLightbox();
-      if (e.key === 'ArrowLeft')   lightboxPrevImg();
-      if (e.key === 'ArrowRight')  lightboxNextImg();
-    });
-  }
-
-  /* ==========================================
-     PROJECT MODAL
-     ========================================== */
-  const modalOverlay = qs('#modal-overlay');
-  const modalBox     = qs('#modal-box');
-
-  function showModal(project) {
-    if (!modalOverlay || !modalBox) return;
-
-    const numStr   = String(project.id).padStart(2, '0');
-    const techHTML = project.technologies
-      .map(t => `<span class="tech-tag">${escHtml(t)}</span>`)
-      .join('');
-
-    const img1 = project.images[0] || '';
-    const img2 = project.images[1] || '';
-
-    modalBox.innerHTML = `
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <div class="modal-number">PROJECT ${numStr}</div>
-          <h2 class="modal-title">${escHtml(project.title)}</h2>
-        </div>
-        <button class="modal-close" id="modal-close-btn" aria-label="Close modal">&#x2715;</button>
-      </div>
-      <div class="modal-body">
-        <div>
-          <div class="modal-label">Description</div>
-          <p class="modal-desc">${escHtml(project.description)}</p>
-        </div>
-        <div>
-          <div class="modal-label">Technologies</div>
-          <div class="modal-tech">${techHTML}</div>
-        </div>
-        <div>
-          <div class="modal-label">Screenshots</div>
-          <div class="modal-screenshots">
-            <div class="modal-screenshot" role="button" tabindex="0"
-                 aria-label="View screenshot 1 in lightbox"
-                 data-images='${JSON.stringify(project.images)}' data-index="0">
-              <img src="${escHtml(img1)}"
-                   alt="Screenshot 1 of ${escHtml(project.title)}"
-                   loading="lazy">
+              <!-- Repository Link / Status -->
+              <div class="pt-2">
+                ${repoButtonHtml}
+              </div>
             </div>
-            <div class="modal-screenshot" role="button" tabindex="0"
-                 aria-label="View screenshot 2 in lightbox"
-                 data-images='${JSON.stringify(project.images)}' data-index="1">
-              <img src="${escHtml(img2)}"
-                   alt="Screenshot 2 of ${escHtml(project.title)}"
-                   loading="lazy">
+
+            <!-- Screenshots Column (2 Images) -->
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              ${imagesHtml}
             </div>
+
           </div>
-        </div>
-      </div>
-    `;
+        </article>
+      `;
+    }).join('');
+  }
 
-    // Attach close listener
-    qs('#modal-close-btn', modalBox).addEventListener('click', hideModal);
+  /**
+   * Open Gallery Lightbox Modal
+   */
+  window.openGalleryModal = function (projectId, imageIndex) {
+    const project = (window.PROJECTS || []).find(p => p.id === projectId);
+    if (!project || !project.images || !project.images[imageIndex]) return;
 
-    // Attach screenshot click listeners inside modal
-    qsa('.modal-screenshot', modalBox).forEach(thumb => {
-      const open = () => {
-        const images = JSON.parse(thumb.dataset.images);
-        const index  = parseInt(thumb.dataset.index, 10);
-        showLightbox(images, index);
-      };
-      thumb.addEventListener('click', open);
-      thumb.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
-      });
-    });
+    currentProject = project;
+    currentImageIndex = imageIndex;
+    updateModalContent();
 
-    modalOverlay.classList.add('active');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     document.body.style.overflow = 'hidden';
-    qs('#modal-close-btn', modalBox).focus();
-  }
+  };
 
-  function hideModal() {
-    if (!modalOverlay) return;
-    modalOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  function initModal() {
-    if (!modalOverlay) return;
-    modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) hideModal();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-        hideModal();
-      }
-    });
-  }
-
-  /* ==========================================
-     SCROLL REVEAL
-     ========================================== */
-  function initScrollReveal() {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    qsa('.reveal').forEach(el => observer.observe(el));
-  }
-
-  /* ==========================================
-     FOOTER YEAR
-     ========================================== */
-  function initFooterYear() {
-    const el = qs('#footer-year');
-    if (el) el.textContent = new Date().getFullYear();
-  }
-
-  /* ==========================================
-     CONTACT — hide email if not set
-     ========================================== */
-  function initContactButtons() {
-    const emailBtn = qs('#contact-email-btn');
-    if (emailBtn) {
-      const email = (CONFIG.email || '').trim();
-      if (email) {
-        emailBtn.href = `mailto:${email}`;
-        emailBtn.style.display = 'inline-flex';
-      } else {
-        emailBtn.style.display = 'none';
-      }
+  /**
+   * Update content inside modal
+   */
+  function updateModalContent() {
+    if (!currentProject || !currentProject.images) return;
+    const imgData = currentProject.images[currentImageIndex];
+    modalImg.src = imgData.src;
+    modalCaption.textContent = imgData.caption || currentProject.title;
+    if (modalCounter) {
+      modalCounter.textContent = `${currentImageIndex + 1} / ${currentProject.images.length}`;
     }
   }
 
-  /* ==========================================
-     UTILITY
-     ========================================== */
-  function escHtml(str) {
-    if (typeof str !== 'string') return '';
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  /**
+   * Navigate Gallery (Previous / Next)
+   */
+  window.navigateGallery = function (direction) {
+    if (!currentProject || !currentProject.images) return;
+    const total = currentProject.images.length;
+    currentImageIndex = (currentImageIndex + direction + total) % total;
+    updateModalContent();
+  };
+
+  /**
+   * Close Gallery Lightbox Modal
+   */
+  window.closeGalleryModal = function (e) {
+    if (e && e.target !== modal && !e.target.closest('#modalCloseBtn')) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    modalImg.src = '';
+    currentProject = null;
+    document.body.style.overflow = 'auto';
+  };
+
+  /**
+   * Mobile menu toggle
+   */
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      const isOpen = !mobileMenu.classList.contains('hidden');
+      if (isOpen) {
+        mobileMenu.classList.add('hidden');
+      } else {
+        mobileMenu.classList.remove('hidden');
+      }
+    });
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+      });
+    });
   }
 
-  /* ==========================================
-     INIT
-     ========================================== */
-  function init() {
+  /**
+   * Keyboard Navigation
+   */
+  document.addEventListener('keydown', function (e) {
+    if (modal && !modal.classList.contains('hidden')) {
+      if (e.key === 'Escape') {
+        window.closeGalleryModal();
+      } else if (e.key === 'ArrowLeft') {
+        window.navigateGallery(-1);
+      } else if (e.key === 'ArrowRight') {
+        window.navigateGallery(1);
+      }
+    }
+  });
+
+  /**
+   * Initialize on DOM Load
+   */
+  document.addEventListener('DOMContentLoaded', () => {
     renderProjects();
-    initNav();
-    initLightbox();
-    initModal();
-    initScrollReveal();
-    initFooterYear();
-    initContactButtons();
-  }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+    const yearEl = document.getElementById('current-year');
+    if (yearEl) {
+      yearEl.textContent = new Date().getFullYear();
+    }
+  });
 
 })();
